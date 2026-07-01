@@ -66,7 +66,7 @@ func TestLLMTools_PrometheusSchemaValid(t *testing.T) {
 		t.Fatal("query_prometheus tool not found")
 	}
 
-	var schema map[string]interface{}
+	var schema map[string]any
 	if err := json.Unmarshal(*promTool, &schema); err != nil {
 		t.Fatalf("invalid JSON schema: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestLLMTools_PrometheusSchemaValid(t *testing.T) {
 		t.Error("expected type=object")
 	}
 
-	props, ok := schema["properties"].(map[string]interface{})
+	props, ok := schema["properties"].(map[string]any)
 	if !ok {
 		t.Fatal("expected properties object")
 	}
@@ -84,7 +84,7 @@ func TestLLMTools_PrometheusSchemaValid(t *testing.T) {
 		t.Error("expected 'query' property")
 	}
 
-	required, ok := schema["required"].([]interface{})
+	required, ok := schema["required"].([]any)
 	if !ok {
 		t.Fatal("expected required array")
 	}

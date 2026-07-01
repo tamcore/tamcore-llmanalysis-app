@@ -43,7 +43,7 @@ func (a *App) streamChatCompletion(ctx context.Context, req ChatRequest, sender 
 	client := a.llmClient
 	tools := llmTools()
 
-	for round := 0; round < maxToolRounds; round++ {
+	for round := range maxToolRounds {
 		ccReq := openai.ChatCompletionRequest{
 			Model:     a.settings.Model,
 			Messages:  messages,

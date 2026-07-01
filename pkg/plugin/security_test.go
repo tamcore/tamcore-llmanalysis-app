@@ -47,7 +47,7 @@ func TestSanitizePrompt_TruncatesMultiByteRunes(t *testing.T) {
 
 	// Build a string of emoji runes that exceeds maxPromptLength runes
 	var b strings.Builder
-	for i := 0; i < maxPromptLength+10; i++ {
+	for range maxPromptLength + 10 {
 		b.WriteRune('🔥') // 4 bytes each
 	}
 	got := sanitizePrompt(b.String())

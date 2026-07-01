@@ -35,7 +35,7 @@ func (a *App) chatCompletion(ctx context.Context, req ChatRequest) (string, *Usa
 
 	tools := llmTools()
 
-	for round := 0; round < maxToolRounds; round++ {
+	for range maxToolRounds {
 		resp, err := a.llmClient.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 			Model:     a.settings.Model,
 			Messages:  messages,
