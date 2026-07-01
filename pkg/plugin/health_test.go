@@ -13,7 +13,7 @@ import (
 func newTestApp(t *testing.T, endpointURL, apiKey string) *App {
 	t.Helper()
 
-	jsonData, err := json.Marshal(map[string]interface{}{
+	jsonData, err := json.Marshal(map[string]any{
 		"endpointURL":    endpointURL,
 		"model":          "test-model",
 		"timeoutSeconds": 10,

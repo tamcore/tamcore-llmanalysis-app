@@ -19,7 +19,7 @@ func TestStreamingChat_SendsSSEChunks(t *testing.T) {
 	requestCount := 0
 	llmServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, _ := io.ReadAll(r.Body)
-		var reqBody map[string]interface{}
+		var reqBody map[string]any
 		_ = json.Unmarshal(bodyBytes, &reqBody)
 		requestCount++
 
@@ -28,18 +28,18 @@ func TestStreamingChat_SendsSSEChunks(t *testing.T) {
 		if !isStream {
 			// Non-streaming: tool-check round — respond with content (no tool_calls)
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"choices": []map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"choices": []map[string]any{
 					{
 						"index": 0,
-						"message": map[string]interface{}{
+						"message": map[string]any{
 							"role":    "assistant",
 							"content": "Hello world!",
 						},
 						"finish_reason": "stop",
 					},
 				},
-				"usage": map[string]interface{}{
+				"usage": map[string]any{
 					"prompt_tokens":     5,
 					"completion_tokens": 3,
 				},
@@ -150,25 +150,25 @@ func TestStreamingChat_MissingPrompt(t *testing.T) {
 func TestStreamingChat_ConversationHistory(t *testing.T) {
 	t.Parallel()
 
-	var receivedMessages []interface{}
+	var receivedMessages []any
 	llmServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, _ := io.ReadAll(r.Body)
-		var reqBody map[string]interface{}
+		var reqBody map[string]any
 		_ = json.Unmarshal(bodyBytes, &reqBody)
 
 		isStream, _ := reqBody["stream"].(bool)
-		messages, _ := reqBody["messages"].([]interface{})
+		messages, _ := reqBody["messages"].([]any)
 
 		if !isStream {
 			// Capture the messages sent to the LLM for verification
 			receivedMessages = messages
 
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"choices": []map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"choices": []map[string]any{
 					{
 						"index": 0,
-						"message": map[string]interface{}{
+						"message": map[string]any{
 							"role":    "assistant",
 							"content": "Follow-up answer",
 						},
@@ -230,19 +230,19 @@ func TestStreamingChat_ConversationHistory(t *testing.T) {
 	}
 
 	// Check that the second message is the first history user message
-	msg1, _ := receivedMessages[1].(map[string]interface{})
+	msg1, _ := receivedMessages[1].(map[string]any)
 	if msg1["role"] != "user" || msg1["content"] != "How is the cluster?" {
 		t.Errorf("message[1] = %v, want user/How is the cluster?", msg1)
 	}
 
 	// Check that the third message is the assistant history
-	msg2, _ := receivedMessages[2].(map[string]interface{})
+	msg2, _ := receivedMessages[2].(map[string]any)
 	if msg2["role"] != "assistant" || msg2["content"] != "CPU is at 45%." {
 		t.Errorf("message[2] = %v, want assistant/CPU is at 45%%.", msg2)
 	}
 
 	// Check that the fourth message is the current prompt
-	msg3, _ := receivedMessages[3].(map[string]interface{})
+	msg3, _ := receivedMessages[3].(map[string]any)
 	if msg3["role"] != "user" || msg3["content"] != "What about memory?" {
 		t.Errorf("message[3] = %v, want user/What about memory?", msg3)
 	}
@@ -253,18 +253,18 @@ func TestStreamingChat_ReturnsTokenCounts(t *testing.T) {
 
 	llmServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, _ := io.ReadAll(r.Body)
-		var reqBody map[string]interface{}
+		var reqBody map[string]any
 		_ = json.Unmarshal(bodyBytes, &reqBody)
 
 		isStream, _ := reqBody["stream"].(bool)
 
 		if !isStream {
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"choices": []map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"choices": []map[string]any{
 					{
 						"index":         0,
-						"message":       map[string]interface{}{"role": "assistant", "content": "Done."},
+						"message":       map[string]any{"role": "assistant", "content": "Done."},
 						"finish_reason": "stop",
 					},
 				},
@@ -335,7 +335,7 @@ func TestStreamingChat_ToolCalling(t *testing.T) {
 	var toolResultContent string
 	llmServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bodyBytes, _ := io.ReadAll(r.Body)
-		var reqBody map[string]interface{}
+		var reqBody map[string]any
 		_ = json.Unmarshal(bodyBytes, &reqBody)
 		callCount++
 
@@ -353,10 +353,10 @@ func TestStreamingChat_ToolCalling(t *testing.T) {
 		}
 
 		// Check if messages contain tool results
-		messages, _ := reqBody["messages"].([]interface{})
+		messages, _ := reqBody["messages"].([]any)
 		hasToolResult := false
 		for _, m := range messages {
-			msg, _ := m.(map[string]interface{})
+			msg, _ := m.(map[string]any)
 			if msg["role"] == "tool" {
 				hasToolResult = true
 				toolResultContent, _ = msg["content"].(string)
@@ -367,18 +367,18 @@ func TestStreamingChat_ToolCalling(t *testing.T) {
 
 		if !hasToolResult {
 			// First call: request a tool call
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"choices": []map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"choices": []map[string]any{
 					{
 						"index": 0,
-						"message": map[string]interface{}{
+						"message": map[string]any{
 							"role":    "assistant",
 							"content": "",
-							"tool_calls": []map[string]interface{}{
+							"tool_calls": []map[string]any{
 								{
 									"id":   "call_123",
 									"type": "function",
-									"function": map[string]interface{}{
+									"function": map[string]any{
 										"name":      "query_prometheus",
 										"arguments": `{"query":"up"}`,
 									},
@@ -391,11 +391,11 @@ func TestStreamingChat_ToolCalling(t *testing.T) {
 			})
 		} else {
 			// Second call: return content after tool results
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"choices": []map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
+				"choices": []map[string]any{
 					{
 						"index": 0,
-						"message": map[string]interface{}{
+						"message": map[string]any{
 							"role":    "assistant",
 							"content": "CPU is at 45%",
 						},
@@ -412,7 +412,7 @@ func TestStreamingChat_ToolCalling(t *testing.T) {
 		switch r.URL.Path {
 		case "/api/datasources":
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "Prometheus", "type": "prometheus", "uid": "prom-uid"},
 			})
 		default:

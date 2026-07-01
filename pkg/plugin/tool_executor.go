@@ -378,15 +378,15 @@ func (te *ToolExecutor) listAlerts(ctx context.Context, arguments string, header
 
 	// If state filter requested, do client-side filtering
 	if args.State != "" {
-		var alerts []map[string]interface{}
+		var alerts []map[string]any
 		if err := json.Unmarshal([]byte(body), &alerts); err != nil {
 			return body, nil //nolint:nilerr // Return raw body if parsing fails
 		}
-		var filtered []map[string]interface{}
+		var filtered []map[string]any
 		for _, alert := range alerts {
 			if state, ok := alert["state"].(string); ok && state == args.State {
 				filtered = append(filtered, alert)
-			} else if status, ok := alert["status"].(map[string]interface{}); ok {
+			} else if status, ok := alert["status"].(map[string]any); ok {
 				if state, ok := status["state"].(string); ok && state == args.State {
 					filtered = append(filtered, alert)
 				}

@@ -128,7 +128,7 @@ func TestResourceChat_Success(t *testing.T) {
 		}
 
 		bodyBytes, _ := io.ReadAll(r.Body)
-		var reqBody map[string]interface{}
+		var reqBody map[string]any
 		_ = json.Unmarshal(bodyBytes, &reqBody)
 
 		if reqBody["model"] != "test-model" {
@@ -218,7 +218,7 @@ func TestStreamResource_RateLimitExceeded(t *testing.T) {
 	app := newTestApp(t, "http://localhost:1/v1", "key")
 
 	// Exhaust the burst of 10
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		req := &backend.CallResourceRequest{
 			Path:    "chat/stream",
 			Method:  http.MethodPost,

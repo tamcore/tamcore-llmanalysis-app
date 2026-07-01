@@ -24,7 +24,7 @@ func TestToolExecutor_ListDatasources(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+		_ = json.NewEncoder(w).Encode([]map[string]any{
 			{"name": "Prometheus", "type": "prometheus", "uid": "prom-uid", "url": "http://prom:9090"},
 			{"name": "Loki", "type": "loki", "uid": "loki-uid", "url": "http://loki:3100"},
 		})
@@ -62,7 +62,7 @@ func TestToolExecutor_QueryPrometheus(t *testing.T) {
 		switch r.URL.Path {
 		case "/api/datasources":
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "Prometheus", "type": "prometheus", "uid": "prom-uid"},
 			})
 		default:
@@ -72,14 +72,14 @@ func TestToolExecutor_QueryPrometheus(t *testing.T) {
 				t.Error("expected query parameter")
 			}
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data": map[string]interface{}{
+				"data": map[string]any{
 					"resultType": "matrix",
-					"result": []map[string]interface{}{
+					"result": []map[string]any{
 						{
 							"metric": map[string]string{"instance": "node1"},
-							"values": [][]interface{}{{float64(time.Now().Unix()), "0.45"}},
+							"values": [][]any{{float64(time.Now().Unix()), "0.45"}},
 						},
 					},
 				},
@@ -100,7 +100,7 @@ func TestToolExecutor_QueryPrometheus(t *testing.T) {
 	}
 
 	// Verify it contains metric data
-	var promResp map[string]interface{}
+	var promResp map[string]any
 	if err := json.Unmarshal([]byte(result), &promResp); err != nil {
 		t.Fatalf("parse result: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestToolExecutor_NoDatasource(t *testing.T) {
 
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -190,7 +190,7 @@ func TestToolExecutor_ListDashboards(t *testing.T) {
 			t.Errorf("expected type=dash-db, got %s", r.URL.Query().Get("type"))
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+		_ = json.NewEncoder(w).Encode([]map[string]any{
 			{"title": "Kubernetes Overview", "uid": "k8s-001", "tags": []string{"kubernetes"}, "url": "/d/k8s-001"},
 			{"title": "Node Metrics", "uid": "node-001", "tags": []string{"node"}, "url": "/d/node-001"},
 		})
@@ -230,7 +230,7 @@ func TestToolExecutor_ListDashboardsWithQuery(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedQuery = r.URL.Query().Get("query")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -254,35 +254,35 @@ func TestToolExecutor_GetDashboard(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"dashboard": map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"dashboard": map[string]any{
 				"title":       "Kubernetes Overview",
 				"description": "Cluster overview dashboard",
 				"tags":        []string{"kubernetes"},
-				"panels": []map[string]interface{}{
+				"panels": []map[string]any{
 					{
 						"title": "CPU Usage",
 						"type":  "timeseries",
-						"targets": []map[string]interface{}{
+						"targets": []map[string]any{
 							{"expr": "rate(node_cpu_seconds_total[5m])", "refId": "A"},
 						},
 					},
 					{
 						"title": "Row: Storage",
 						"type":  "row",
-						"panels": []map[string]interface{}{
+						"panels": []map[string]any{
 							{
 								"title": "Disk Usage",
 								"type":  "gauge",
-								"targets": []map[string]interface{}{
+								"targets": []map[string]any{
 									{"expr": "node_filesystem_avail_bytes", "refId": "A"},
 								},
 							},
 						},
 					},
 				},
-				"templating": map[string]interface{}{
-					"list": []map[string]interface{}{
+				"templating": map[string]any{
+					"list": []map[string]any{
 						{"name": "namespace", "current": map[string]string{"text": "default", "value": "default"}},
 					},
 				},
@@ -358,13 +358,13 @@ func TestToolExecutor_ListAlerts(t *testing.T) {
 		switch r.URL.Path {
 		case "/api/datasources":
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "Alertmanager", "type": "alertmanager", "uid": "am-uid"},
 			})
 		default:
 			// Alertmanager proxy endpoint
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{
 					"labels":      map[string]string{"alertname": "HighCPU", "severity": "critical", "namespace": "default"},
 					"annotations": map[string]string{"summary": "CPU usage is above 90%"},
@@ -388,7 +388,7 @@ func TestToolExecutor_ListAlerts(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	var alerts []map[string]interface{}
+	var alerts []map[string]any
 	if err := json.Unmarshal([]byte(result), &alerts); err != nil {
 		t.Fatalf("unmarshal result: %v", err)
 	}
@@ -406,13 +406,13 @@ func TestToolExecutor_ListAlerts_WithFilter(t *testing.T) {
 		switch r.URL.Path {
 		case "/api/datasources":
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "Alertmanager", "type": "alertmanager", "uid": "am-uid"},
 			})
 		default:
 			receivedFilter = r.URL.Query().Get("filter")
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+			_ = json.NewEncoder(w).Encode([]map[string]any{})
 		}
 	}))
 	defer grafanaMock.Close()
@@ -432,7 +432,7 @@ func TestToolExecutor_ListAlerts_NoAlertmanager(t *testing.T) {
 
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+		_ = json.NewEncoder(w).Encode([]map[string]any{
 			{"name": "Prometheus", "type": "prometheus", "uid": "prom-uid"},
 		})
 	}))
@@ -457,7 +457,7 @@ func TestToolExecutor_TokenPath_ReadsFromFile(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -482,7 +482,7 @@ func TestToolExecutor_TokenPath_OverridesDefaultHeaders(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -510,7 +510,7 @@ func TestToolExecutor_TokenPath_TrimsWhitespace(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -530,7 +530,7 @@ func TestToolExecutor_TokenPath_MissingFileFallsBack(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -558,7 +558,7 @@ func TestToolExecutor_TokenPath_EmptyFileFallsBack(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -586,7 +586,7 @@ func TestToolExecutor_TokenPath_PicksUpNewToken(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		receivedAuth = r.Header.Get("Authorization")
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode([]map[string]interface{}{})
+		_ = json.NewEncoder(w).Encode([]map[string]any{})
 	}))
 	defer grafanaMock.Close()
 
@@ -623,13 +623,13 @@ func TestToolExecutor_QueryPrometheus_EscapesDsUID(t *testing.T) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/api/datasources" {
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "Prometheus", "type": "prometheus", "uid": "uid/with/../traversal"},
 			})
 		} else {
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]any{
 				"status": "success",
-				"data":   map[string]interface{}{"resultType": "matrix", "result": []interface{}{}},
+				"data":   map[string]any{"resultType": "matrix", "result": []any{}},
 			})
 		}
 	}))
@@ -656,16 +656,16 @@ func TestToolExecutor_ListAlerts_NoDuplicateAppend(t *testing.T) {
 	grafanaMock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.URL.Path == "/api/datasources" {
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "AM", "type": "alertmanager", "uid": "am-uid"},
 			})
 		} else {
 			// Alert has BOTH top-level state and nested status.state
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{
 					"labels": map[string]string{"alertname": "Test"},
 					"state":  "firing",
-					"status": map[string]interface{}{"state": "firing"},
+					"status": map[string]any{"state": "firing"},
 				},
 			})
 		}
@@ -678,7 +678,7 @@ func TestToolExecutor_ListAlerts_NoDuplicateAppend(t *testing.T) {
 		t.Fatalf("Execute failed: %v", err)
 	}
 
-	var alerts []map[string]interface{}
+	var alerts []map[string]any
 	if err := json.Unmarshal([]byte(result), &alerts); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
@@ -699,11 +699,11 @@ func TestToolExecutor_ListAlertRules(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string][]map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string][]map[string]any{
 			"default": {
 				{
 					"name": "HighCPU",
-					"rules": []map[string]interface{}{
+					"rules": []map[string]any{
 						{
 							"alert":  "HighCPU",
 							"expr":   "rate(node_cpu_seconds_total[5m]) > 0.9",
@@ -731,7 +731,7 @@ func TestToolExecutor_ListAlertRules(t *testing.T) {
 	}
 
 	// Verify it's valid JSON
-	var parsed interface{}
+	var parsed any
 	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
 		t.Fatalf("result is not valid JSON: %v", err)
 	}
@@ -796,7 +796,7 @@ func TestToolExecutor_DatasourceCacheHit(t *testing.T) {
 		if r.URL.Path == "/api/datasources" {
 			callCount++
 			w.Header().Set("Content-Type", "application/json")
-			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+			_ = json.NewEncoder(w).Encode([]map[string]any{
 				{"name": "Prometheus", "type": "prometheus", "uid": "prom-uid"},
 				{"name": "Loki", "type": "loki", "uid": "loki-uid"},
 			})
